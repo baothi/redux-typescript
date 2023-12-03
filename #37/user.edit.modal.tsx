@@ -2,17 +2,38 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import FloatingLabel from 'react-bootstrap/FloatingLabel';
 import Form from 'react-bootstrap/Form';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { fetchCreateUsers, resetCreate } from '../../redux/user/user.slide';
+import { updateAUser, resetUpdate } from '../../redux/user/user.slide';
 import { toast } from 'react-toastify';
 
-const UserCreateModal = (props: any) => {
-    const { isOpenCreateModal, setIsOpenCreateModal } = props;
+const UserEditModal = (props: any) => {
+    const { isOpenUpdateModal, setIsOpenUpdateModal, dataUser } = props;
     const dispatch = useAppDispatch();
+    const isUpdateSuccess = useAppSelector(state => state.user.isUpdateSuccess)
+    const [id, setId] = useState();
 
     const [email, setEmail] = useState<string>("");
     const [name, setName] = useState<string>("");
+
+    useEffect(() => {
+        if (dataUser?.id) {
+            setId(dataUser?.id);
+            setEmail(dataUser?.email);
+            setName(dataUser?.name)
+        }
+    }, [dataUser])
+
+    useEffect(() => {
+        if (isUpdateSuccess === true) {
+            setIsOpenUpdateModal(false);
+            setEmail("");
+            setName("");
+            toast('🦄 Wow so easy! Update succeed');
+            //reset redux
+            dispatch(resetUpdate())
+        }
+    }, [isUpdateSuccess])
 
     const handleSubmit = () => {
         if (!email) {
@@ -23,35 +44,21 @@ const UserCreateModal = (props: any) => {
             alert("name empty");
             return;
         }
-        dispatch(fetchCreateUsers({email, name}))
+        dispatch(updateAUser({ email, name, id }))
     }
-
-    const isUpdateSuccess = useAppSelector(state => state.user.isUpdateSuccess);
-
-    useEffect(() => {
-        if(isUpdateSuccess === true)
-        {
-            setIsOpenCreateModal(false);
-            setEmail("");
-            setName("");
-            toast('🦄 create user success!');
-            // reset redux
-            dispatch(resetCreate());
-        }
-    },[isUpdateSuccess])
 
     return (
         <>
             <Modal
-                show={isOpenCreateModal}
+                show={isOpenUpdateModal}
                 size="lg"
                 aria-labelledby="contained-modal-title-vcenter"
                 backdrop={false}
-                onHide={() => setIsOpenCreateModal(false)}
+                onHide={() => setIsOpenUpdateModal(false)}
             >
                 <Modal.Header closeButton>
                     <Modal.Title>
-                        Add A New User
+                        Update A User
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -76,12 +83,12 @@ const UserCreateModal = (props: any) => {
                 <Modal.Footer>
                     <Button
                         variant='warning'
-                        onClick={() => setIsOpenCreateModal(false)} className='mr-2'>Cancel</Button>
-                    <Button onClick={() => handleSubmit()}>Save</Button>
+                        onClick={() => setIsOpenUpdateModal(false)} className='mr-2'>Cancel</Button>
+                    <Button onClick={() => handleSubmit()}>Confirm</Button>
                 </Modal.Footer>
             </Modal>
         </>
     )
 }
 
-export default UserCreateModal;
+export default UserEditModal;

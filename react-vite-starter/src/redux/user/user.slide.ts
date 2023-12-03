@@ -13,10 +13,12 @@ interface IUser {
 interface UserState {
   listUsers: IUser[];
   createUsers: IUser[];
+  updateUsers: IUser[];
   loading: boolean;
   isError: boolean,
   isSuccess: boolean,
-  isCreateSuccess: boolean
+  isCreateSuccess: boolean,
+  isUpdateSuccess: boolean,
   
 }
 
@@ -24,10 +26,12 @@ interface UserState {
 const initialState: UserState = {
   listUsers: [],
   createUsers: [],
+  updateUsers: [],
   loading: false,
   isError: false,
   isSuccess: false,
-  isCreateSuccess: false
+  isCreateSuccess: false,
+  isUpdateSuccess: false,
 }
 
 // Async thunk with TypeScript
@@ -76,6 +80,28 @@ export const fetchCreateUsers = createAsyncThunk(
   }
 );
 
+export const fetchUpdateUsers = createAsyncThunk(
+  'users/fetchUpdateUsers',
+  async (newUser: IUser, thunkAPI) => {
+    try {
+      const response = await userService.fetchUpdateUsers(newUser);
+      if(response && response.id){
+        thunkAPI.dispatch(fetchListUsers());
+      }
+      return response;
+    } catch (error) {
+      // Type check and cast the error
+      if (error instanceof Error) {
+        return thunkAPI.rejectWithValue(error.message);
+      } else {
+        // Handle cases where the error is not an instance of Error
+        // You might want to return a generic error message here
+        return thunkAPI.rejectWithValue('An unexpected error occurred');
+      }
+    }
+  }
+);
+
 // Slice with TypeScript
 const userSlice = createSlice({
   name: 'user',
@@ -83,6 +109,9 @@ const userSlice = createSlice({
   reducers: {
     resetCreate(state){
       state.isCreateSuccess = false;
+    },
+    resetupdate(state){
+      state.isUpdateSuccess = false;
     }
   },
   extraReducers: (builder) => {
@@ -110,9 +139,21 @@ const userSlice = createSlice({
         state.isError= false,
         state.loading = false;
     });
+    builder.addCase(fetchUpdateUsers.pending, (state) => {
+      state.loading = true;
+    });
+    builder.addCase(fetchUpdateUsers.fulfilled, (state, action: PayloadAction<IUser[]>) => {
+      state.updateUsers = action.payload;
+      state.loading = false;
+      state.isUpdateSuccess= true;
+    });
+    builder.addCase(fetchUpdateUsers.rejected, (state) => {
+        state.isError= false,
+        state.loading = false;
+    });
   },
 });
 
-export const { resetCreate } = userSlice.actions;
+export const { resetCreate, resetupdate } = userSlice.actions;
 
 export default userSlice.reducer;
