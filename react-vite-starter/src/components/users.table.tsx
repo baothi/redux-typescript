@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import Table from 'react-bootstrap/Table';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { fetchListUsers } from '../redux/user/user.slide';
+import { toast } from 'react-toastify';
 
 // interface IUser{
 //     id: number;
@@ -15,6 +16,8 @@ function UsersTable() {
 
     useEffect(()=>{
         dispatch(fetchListUsers())
+        // toast.success("fetch successfully");
+        toast('🦄 Wow so easy!');
     },[])
     return (
             <Table striped bordered hover>
